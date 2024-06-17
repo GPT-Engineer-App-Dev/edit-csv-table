@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Container, VStack, Text, Button, Input, Table, Thead, Tbody, Tr, Th, Td, IconButton } from "@chakra-ui/react";
-import { FaTrash, FaPlus } from "react-icons/fa";
+import { FaPlus, FaTrash, FaDownload } from "react-icons/fa";
 import Papa from "papaparse";
 import { CSVLink } from "react-csv";
 
 const Index = () => {
-  const [csvData, setCsvData] = useState([]);
+  const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [fileName, setFileName] = useState("edited_data.csv");
 
@@ -15,9 +15,9 @@ const Index = () => {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: (result) => {
-          setHeaders(result.meta.fields);
-          setCsvData(result.data);
+        complete: (results) => {
+          setHeaders(Object.keys(results.data[0]));
+          setData(results.data);
         },
       });
     }
@@ -25,26 +25,26 @@ const Index = () => {
 
   const handleAddRow = () => {
     const newRow = headers.reduce((acc, header) => ({ ...acc, [header]: "" }), {});
-    setCsvData([...csvData, newRow]);
+    setData([...data, newRow]);
   };
 
   const handleRemoveRow = (index) => {
-    const newData = csvData.filter((_, i) => i !== index);
-    setCsvData(newData);
+    const newData = data.filter((_, i) => i !== index);
+    setData(newData);
   };
 
   const handleInputChange = (index, header, value) => {
-    const newData = [...csvData];
+    const newData = [...data];
     newData[index][header] = value;
-    setCsvData(newData);
+    setData(newData);
   };
 
   return (
-    <Container centerContent maxW="container.xl" py={10}>
+    <Container centerContent maxW="container.md" height="100vh" display="flex" flexDirection="column" justifyContent="center" alignItems="center">
       <VStack spacing={4} width="100%">
         <Text fontSize="2xl">CSV Upload, Edit, and Download Tool</Text>
         <Input type="file" accept=".csv" onChange={handleFileUpload} />
-        {csvData.length > 0 && (
+        {data.length > 0 && (
           <>
             <Table variant="simple">
               <Thead>
@@ -56,7 +56,7 @@ const Index = () => {
                 </Tr>
               </Thead>
               <Tbody>
-                {csvData.map((row, rowIndex) => (
+                {data.map((row, rowIndex) => (
                   <Tr key={rowIndex}>
                     {headers.map((header) => (
                       <Td key={header}>
@@ -68,7 +68,7 @@ const Index = () => {
                     ))}
                     <Td>
                       <IconButton
-                        aria-label="Remove row"
+                        aria-label="Remove Row"
                         icon={<FaTrash />}
                         onClick={() => handleRemoveRow(rowIndex)}
                       />
@@ -80,8 +80,8 @@ const Index = () => {
             <Button leftIcon={<FaPlus />} onClick={handleAddRow}>
               Add Row
             </Button>
-            <CSVLink data={csvData} headers={headers} filename={fileName}>
-              <Button>Download CSV</Button>
+            <CSVLink data={data} headers={headers} filename={fileName}>
+              <Button leftIcon={<FaDownload />}>Download CSV</Button>
             </CSVLink>
           </>
         )}
